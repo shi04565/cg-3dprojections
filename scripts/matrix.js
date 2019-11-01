@@ -336,7 +336,42 @@ function mat4x4perspective(vrp, vpn, vup, prp, clip) {
     // 4. shear such that the center line of the view volume becomes the z-axis
     // 5. scale into canonical view volume (truncated pyramid)
     //    (x = [z,-z], y = [z,-z], z = [-z_min,-1])
-    
+	
+	var translate = [[1,0,0,-vrp.x],[0,1,0,-vrp.y],[0,0,1,-vrp.z],[0,0,0,1]];
+	var t_matrix = new Matrix(4,4);
+	t_matrix.values(translate);
+	
+	var u = vup.cross(vpn);
+	var rotate = [[u.x,u.y,u.z,0],[vup.x,vup.y,vup.z,0],[vpn.x,vpn.y,vpn.z,0],[0,0,0,1]];
+	var r_matrix = new Matrix(4,4);
+	r_matrix.values(rotate);
+	
+	var cwx = (clip.umin+clip.umax)/2;
+	var cwy = (clip.vmin+clip.vmax)/2;
+	var dopz = 0-prp.z;
+	var dopx = cwx-prp.x;
+	var dpoy = cwy-prp.y;
+	
+	var translate2 = [[1,0,0,-prp.x],[0,1,0,-prp.y],[0,0,1,-prp.z],[0,0,0,1]];
+	var t2_matrix = new Matrix(4,4);
+	t2_matrix.values(translate2);
+	
+	var shx = -dopx/dopz;
+	var shy = -dopy/dopz;
+	var shpar = [[1,0,shx,0],[0,1,shy,0],[0,0,1,0],[0,0,0,1]];
+	var SH_matrix = new Matrix(4,4);
+	SH_matrix.values(shpar);
+	
+	var vrppz  = -prp.z;
+	var sperx = 2*vrppz / ((clip.umax - clip.umin) * (vrppz + clip.back));
+	var spery = 2*vrppz / ((clip.vmax - clip.vmin) * (vrppz + clip.back));
+    var sperz = -1 / (vrppz + clip.back);
+	var sper = new Matrix(4,4);
+	sper.values = [[sperx, 0, 0, 0], [0, spery, 0, 0], [0 , 0, sperz, 0], [0, 0, 0, 1]];
+	
+	var nper = Matrix.multiply(sper, shpar, t2_matrix, r_matrix, t_matrix);
+	return nper;
+
 }
 
 function mat4x4mper(near) {
@@ -357,3 +392,10 @@ function Vector4(x, y, z, w) {
     result.values = [x, y, z, w];
     return result;
 }
+
+
+
+
+
+
+
