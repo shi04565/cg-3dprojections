@@ -239,37 +239,49 @@ function mat4x4identity() {
 
 function mat4x4translate(tx, ty, tz) {
     var result = new Matrix(4, 4);
-    
+	var translate = [[1,0,0,tx],[0,1,0,ty],[0,0,1,tz],[0,0,0,1]];
+	result.values(translate);
     return result;
 }
 
 function mat4x4scale(sx, sy, sz) {
     var result = new Matrix(4, 4);
-    
+	var scale = [[sx,0,0,0],[0,sy,0,0],[0,0,sz,0],[0,0,0,1]];
+    result.values(scale);
     return result;
 }
 
 function mat4x4rotatex(theta) {
     var result = new Matrix(4, 4);
-    
+	var c = Math.cos(theta*Math.PI/180.0);//cos theta
+	var s= Math.sin(theta*Math.PI/180.0);// sin theta
+   	var rotate = [[1,0,0,0],[0,c,-s,0],[0,s,c,0],[0,0,0,1]];
+    result.values(rotate);
     return result;
 }
 
 function mat4x4rotatey(theta) {
     var result = new Matrix(4, 4);
-    
+	var c = Math.cos(theta*Math.PI/180.0);//cos theta
+	var s= Math.sin(theta*Math.PI/180.0);// sin theta
+   	var rotate = [[c,0,s,0],[0,1,0,0],[-s,0,c,0],[0,0,0,1]];
+    result.values(rotate);
     return result;
 }
 
 function mat4x4rotatez(theta) {
     var result = new Matrix(4, 4);
-    
+	var c = Math.cos(theta*Math.PI/180.0);//cos theta
+	var s= Math.sin(theta*Math.PI/180.0);// sin theta
+   	var rotate = [[c,-s,0,0],[s,c,0,0],[0,0,1,0],[0,0,0,1]];
+    result.values(rotate);
     return result;
 }
 
 function mat4x4shearxy(shx, shy) {
     var result = new Matrix(4, 4);
-    
+    var shear = [[1,0,sha,0],[0,1,shy,0],[0,0,1,0],[0,0,0,1]];
+	result.values(shear);
     return result;
 }
 
@@ -280,6 +292,39 @@ function mat4x4parallel(vrp, vpn, vup, prp, clip) {
     // 3. shear such that the DOP becomes parallel to the z-axis
     // 4. translate and scale into canonical view volume
     //    (x = [-1,1], y = [-1,1], z = [0,-1])
+	
+	var translate = [[1,0,0,-vrp.x],[0,1,0,-vrp.y],[0,0,1,-vrp.z],[0,0,0,1]];
+	var t_matrix = new Matrix(4,4);
+	t_matrix.values(translate);
+	
+	var u = vup.cross(vpn);
+	var rotate = [[u.x,u.y,u.z,0],[vup.x,vup.y,vup.z,0],[vpn.x,vpn.y,vpn.z,0],[0,0,0,1]];
+	var r_matrix = new Matrix(4,4);
+	r_matrix.values(rotate);
+	
+	var cwx = (clip.umin+clip.umax)/2;
+	var cwy = (clip.vmin+clip.vmax)/2;
+	var dopz = 0-prp.z;
+	var dopx = cwx-prp.x;
+	var dpoy = cwy-prp.y;
+	
+	var shx = -dopx/dopz;
+	var shy = -dopy/dopz;
+	var shpar = [[1,0,shx,0],[0,1,shy,0],[0,0,1,0],[0,0,0,1]];
+	var SH_matrix = new Matrix(4,4);
+	SH_matrix.values(shpar);
+	
+	var Tpar = [[1,0,0,-cwx],[0,1,0,-cwy],[0,0,1,-clip.front],[0,0,0,1]];
+	var Tpar_matrix = new Matrix(4,4);
+	Tpar_matrix.values(Tpar);
+	
+	
+	var Spar = [[2/(clip.umax-clip.umin),0,0,0],[0,2/(clip.vmax-clip.vmin),0,0],[0,0,1/(clip.front-clip.back),0],[0,0,0,1]];
+	var Spar_matrix = new Matrix(4,4);
+	Spar_matrix.values(Spar);
+	
+	var Npar = Matrix.multiply(Spar_matrix,Tpar_matrix,SH_matrix,r_matrix,t_matrix);
+	return Npar;
     
 }
 
