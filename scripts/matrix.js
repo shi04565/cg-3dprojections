@@ -297,8 +297,10 @@ function mat4x4parallel(vrp, vpn, vup, prp, clip) {
 	var t_matrix = new Matrix(4,4);
 	t_matrix.values(translate);
 	
-	var u = vup.cross(vpn);
-	var rotate = [[u.x,u.y,u.z,0],[vup.x,vup.y,vup.z,0],[vpn.x,vpn.y,vpn.z,0],[0,0,0,1]];
+	
+	var n = vpn.normalize();
+	var u = vup.cross(n);
+	var rotate = [[u.x,u.y,u.z,0],[vup.x,vup.y,vup.z,0],[n.x,n.y,n.z,0],[0,0,0,1]];
 	var r_matrix = new Matrix(4,4);
 	r_matrix.values(rotate);
 	
@@ -341,8 +343,9 @@ function mat4x4perspective(vrp, vpn, vup, prp, clip) {
 	var t_matrix = new Matrix(4,4);
 	t_matrix.values(translate);
 	
-	var u = vup.cross(vpn);
-	var rotate = [[u.x,u.y,u.z,0],[vup.x,vup.y,vup.z,0],[vpn.x,vpn.y,vpn.z,0],[0,0,0,1]];
+	var n = vpn.normalize();
+	var u = vup.cross(n);
+	var rotate = [[u.x,u.y,u.z,0],[vup.x,vup.y,vup.z,0],[n.x,n.y,n.z,0],[0,0,0,1]];
 	var r_matrix = new Matrix(4,4);
 	r_matrix.values(rotate);
 	
