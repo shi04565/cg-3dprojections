@@ -277,7 +277,7 @@ function LoadNewScene() {
 				scene.models[i].vertices = [v0,v1,v2,v3,v4,v5,v6,v7];
 				scene.models[i].edges = [[0,1,2,3,0],[4,5,6,7,4],[0,4],[1,5],[2,6],[3,7]];
 				
-			}else if (scene.models[i].type === 'cube'){
+			}else if (scene.models[i].type === 'Cylinder'){
 				
 				var radius = scene.models[i].radius;
 				var height = scene.models[i].height;
