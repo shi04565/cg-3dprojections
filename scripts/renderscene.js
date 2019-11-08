@@ -60,15 +60,29 @@ function Init() {
 function DrawScene() {
 	
 	var npar_matrix = mat4x4perspective(scene.view.vrp, scene.view.vpn, scene.view.vup, scene.view.prp, scene.view.clip);
-	var mpar_matrix = mat4x4mper(-1);
+	var mPerspective_matrix = mat4x4mper(-1);
 	var view_matrix = new Matrix(4,4);
 	view_matrix.values = [[view.width/2, 0, 0, view.width/2],[0, view.height/2, 0, view.height/2],[0,0,1,0],[0,0,0,1]];
 
 	if(scene.view.type === 'perspective'){
-		var projectionMatrix = [];
+		var projectionVector = [];
 		for (var i = 0; i < scene.models[0].vertices.length; i++) {
-			projectionMatrix.push(Matrix.multiply(view_matrix,mpar_matrix,npar_matrix,scene.models[0].vertices[i]));
-		}		
+			projectionVector.push(Matrix.multiply(view_matrix,mPerspective_matrix,npar_matrix,scene.models[0].vertices[i]));
+		}
+		for(){
+			for(var i =0; i<scene.models[].edges.length;i++){
+				for(var j=0; j<scene.models[].edges[i].length-1;j++){
+					drawx1 = scene.models.edges[i][j].x;
+					drawy1 = scene.models.edges[i][j].y;
+					drawx2 = scene.models.edges[i][j+1].x;
+					drawy2 = scene.models.edges[i][j+1].y;				
+					DrawLine(drawx1,drawy1,drawx2,drawy2);
+				}
+			}
+		}
+
+		
+		
 	}else{
 		
 	}
@@ -86,12 +100,12 @@ function GetOutcode(Vector4,z_min){
 	var z = Vector4.z;
 	//var zmin = -(-z+scene.view.clip[4])/(-z+scene.view.clip[5]);
 	var code = 0;
-	if(scene.view.type == "perspective") {// for outcode left = 32
-										  // right = 16
-										  // bottom = 8
-										  // top = 4
-										  // front = 2
-										  // back = 1										  
+	if(scene.view.type){			// for outcode left = 32
+				// right = 16
+				// bottom = 8
+				// top = 4
+				// front = 2
+				// back = 1										  
 		if(x<z) {
 			code += 32; 
 		} else if(x>-z) {
@@ -165,67 +179,129 @@ function clipping(pt0,pt1,view){
 	while(!done){
 		var OR = (codeA | codeB);
 		var And = (codeA & codeB);
+		if(view.type == 'perspective'){
+			if(OR == 0){
+				done = true;
+				result.pt0.x = pt0.x;
+				result.pt0.y = pt0.y;
+				result.pt0.z = pt0.z;
+				result.pt1.x = pt1.x;
+				result.pt1.y = pt1.y;
+				result.pt1.z = pt1.z;
 
-		if(OR == 0){
-			done = true;
-			result.pt0.x = pt0.x;
-			result.pt0.y = pt0.y;
-			result.pt0.z = pt0.z;
-			result.pt1.x = pt1.x;
-			result.pt1.y = pt1.y;
-			result.pt1.z = pt1.z;
-
-		}else if(And != 0){
-			done = true;
-			reject = true;
+			}else if(And != 0){
+				done = true;
+				reject = true;
+			}else{
+				var select_pt;
+				var select_code;
+				if(codeA>0){
+					select_pt = pt0;
+					select_code = codeA;
+				}else{
+					select_pt = pt1;
+					select_code = codeB;
+				}
+				if((select_code & left) === left){
+					let t = (-select_pt.x+select_pt.z)/(deltax-deltaz);
+					select_pt.x = select_pt.x+t*deltax;
+					select_pt.y = select_pt.y+t*deltay;
+					select_pt.z = select_pt.z+t*deltaz;
+				}else if ((select_code & right) === right){
+					let t = (select_pt.x+select_pt.z)/(-deltax-deltaz);
+					select_pt.x = select_pt.x+t*deltax;
+					select_pt.y = select_pt.y+t*deltay;
+					select_pt.z = select_pt.z+t*deltaz;
+				}else if ((select_code & bottom) === bottom){
+					let t = (-select_pt.y+select_pt.z)/(deltay-deltaz);
+					select_pt.x = select_pt.x+t*deltax;
+					select_pt.y = select_pt.y+t*deltay;
+					select_pt.z = select_pt.z+t*deltaz;
+				}else if ((select_code & top) === top){
+					let t = (select_pt.y+select_pt.z)/(-deltay-deltaz);
+					select_pt.x = select_pt.x+t*deltax;
+					select_pt.y = select_pt.y+t*deltay;
+					select_pt.z = select_pt.z+t*deltaz;
+				}else if ((select_code & front) === front){
+					let t = (select_pt.z-zmin)/(-deltaz);
+					select_pt.x = select_pt.x+t*deltax;
+					select_pt.y = select_pt.y+t*deltay;
+					select_pt.z = select_pt.z+t*deltaz;
+				}else if ((select_code & back) === back){
+					let t = (-select_pt.z-1)/(deltaz);
+					select_pt.x = select_pt.x+t*deltax;
+					select_pt.y = select_pt.y+t*deltay;
+					select_pt.z = select_pt.z+t*deltaz;
+				}
+				select_code = GetOutcode(select_pt,view);
+				if(codeA>0){
+					codeA = select_code;
+				}else{
+					codeB = select_code;
+				}
+			}
 		}else{
-			var select_pt;
-			var select_code;
-			if(codeA>0){
-				select_pt = pt0;
-				select_code = codeA;
+			if(OR == 0){
+				done = true;
+				result.pt0.x = pt0.x;
+				result.pt0.y = pt0.y;
+				result.pt0.z = pt0.z;
+				result.pt1.x = pt1.x;
+				result.pt1.y = pt1.y;
+				result.pt1.z = pt1.z;
+
+			}else if(And != 0){
+				done = true;
+				reject = true;
 			}else{
-				select_pt = pt1;
-				select_code = codeB;
+				var select_pt;
+				var select_code;
+				if(codeA>0){
+					select_pt = pt0;
+					select_code = codeA;
+				}else{
+					select_pt = pt1;
+					select_code = codeB;
+				}
+				if((select_code & left) === left){
+					let t = (-select_pt.x-1)/(deltax);
+					select_pt.x = select_pt.x+t*deltax;
+					select_pt.y = select_pt.y+t*deltay;
+					select_pt.z = select_pt.z+t*deltaz;
+				}else if ((select_code & right) === right){
+					let t = (1-select_pt.x)/(deltax);
+					select_pt.x = select_pt.x+t*deltax;
+					select_pt.y = select_pt.y+t*deltay;
+					select_pt.z = select_pt.z+t*deltaz;
+				}else if ((select_code & bottom) === bottom){
+					let t = (-select_pt.y-1)/(deltay);
+					select_pt.x = select_pt.x+t*deltax;
+					select_pt.y = select_pt.y+t*deltay;
+					select_pt.z = select_pt.z+t*deltaz;
+				}else if ((select_code & top) === top){
+					let t = (1-select_pt.y)/(deltay);
+					select_pt.x = select_pt.x+t*deltax;
+					select_pt.y = select_pt.y+t*deltay;
+					select_pt.z = select_pt.z+t*deltaz;
+				}else if ((select_code & front) === front){
+					let t = (-select_pt.z)/(deltaz);
+					select_pt.x = select_pt.x+t*deltax;
+					select_pt.y = select_pt.y+t*deltay;
+					select_pt.z = select_pt.z+t*deltaz;
+				}else if ((select_code & back) === back){
+					let t = (-1-select_pt.z)/(deltaz);
+					select_pt.x = select_pt.x+t*deltax;
+					select_pt.y = select_pt.y+t*deltay;
+					select_pt.z = select_pt.z+t*deltaz;
+				}
+				select_code = GetOutcode(select_pt,view);
+				if(codeA>0){
+					codeA = select_code;
+				}else{
+					codeB = select_code;
+				}
 			}
-			if((select_code & left) === left){
-				let t = (-select_pt.x+select_pt.z)/(deltax-deltaz);
-				select_pt.x = select_pt.x+t*deltax;
-				select_pt.y = select_pt.y+t*deltay;
-				select_pt.z = select_pt.z+t*deltaz;
-			}else if ((select_code & right) === right){
-				let t = (select_pt.x+select_pt.z)/(-deltax-deltaz);
-				select_pt.x = select_pt.x+t*deltax;
-				select_pt.y = select_pt.y+t*deltay;
-				select_pt.z = select_pt.z+t*deltaz;
-			}else if ((select_code & bottom) === bottom){
-				let t = (-select_pt.y+select_pt.z)/(deltay-deltaz);
-				select_pt.x = select_pt.x+t*deltax;
-				select_pt.y = select_pt.y+t*deltay;
-				select_pt.z = select_pt.z+t*deltaz;
-			}else if ((select_code & top) === top){
-				let t = (select_pt.y+select_pt.z)/(-deltay-deltaz);
-				select_pt.x = select_pt.x+t*deltax;
-				select_pt.y = select_pt.y+t*deltay;
-				select_pt.z = select_pt.z+t*deltaz;
-			}else if ((select_code & front) === front){
-				let t = (select_pt.z-zmin)/(-deltaz);
-				select_pt.x = select_pt.x+t*deltax;
-				select_pt.y = select_pt.y+t*deltay;
-				select_pt.z = select_pt.z+t*deltaz;
-			}else if ((select_code & back) === back){
-				let t = (-select_pt.z-1)/(deltaz);
-				select_pt.x = select_pt.x+t*deltax;
-				select_pt.y = select_pt.y+t*deltay;
-				select_pt.z = select_pt.z+t*deltaz;
-			}
-			select_code = GetOutcode(select_pt,view);
-			if(codeA>0){
-				codeA = select_code;
-			}else{
-				codeB = select_code;
-			}
-		}
+		}	
 	}
 	var pt_0 = Vector4(pt0_array[0],pt0_array[1],pt0_array[2],1);
 	var pt_1 = Vector4(pt1_array[0],pt1_array[1],pt1_array[2],1);
