@@ -58,24 +58,39 @@ function Init() {
 
 // Main drawing code here! Use information contained in variable `scene`
 function DrawScene() {
-	
-	var npar_matrix = mat4x4perspective(scene.view.vrp, scene.view.vpn, scene.view.vup, scene.view.prp, scene.view.clip);
-	var mPerspective_matrix = mat4x4mper(-1);
-	var view_matrix = new Matrix(4,4);
-	view_matrix.values = [[view.width/2, 0, 0, view.width/2],[0, view.height/2, 0, view.height/2],[0,0,1,0],[0,0,0,1]];
 
 	if(scene.view.type === 'perspective'){
-		var projectionVector = [];
+		var npar_matrix = mat4x4perspective(scene.view.vrp, scene.view.vpn, scene.view.vup, scene.view.prp, scene.view.clip);
+		var mPerspective_matrix = mat4x4mper(-1);
+		var view_matrix = new Matrix(4,4);
+		view_matrix.values = [[view.width/2, 0, 0, view.width/2],[0, view.height/2, 0, view.height/2],[0,0,1,0],[0,0,0,1]];
+		var projectionMatrix = [];
 		for (var i = 0; i < scene.models[0].vertices.length; i++) {
-			projectionVector.push(Matrix.multiply(view_matrix,mPerspective_matrix,npar_matrix,scene.models[0].vertices[i]));
+			projectionMatrix.push(Matrix.multiply(view_matrix,mPerspective_matrix,npar_matrix,scene.models[0].vertices[i]));
 		}
-		for(){
-			for(var i =0; i<scene.models[].edges.length;i++){
-				for(var j=0; j<scene.models[].edges[i].length-1;j++){
-					drawx1 = scene.models.edges[i][j].x;
-					drawy1 = scene.models.edges[i][j].y;
-					drawx2 = scene.models.edges[i][j+1].x;
-					drawy2 = scene.models.edges[i][j+1].y;				
+		
+		var projectionVector = [];		
+		for (var i = 0; i< projectionMatrix.length; i++) {
+			var x = projectionMatrix[i].values[0][0]/projectionMatrix[i].values[3][0];
+			var y = projectionMatrix[i].values[1][0]/projectionMatrix[i].values[3][0];
+			var z = projectionMatrix[i].values[2][0]/projectionMatrix[i].values[3][0];
+			var w = projectionMatrix[i].values[3][0]/projectionMatrix[i].values[3][0];
+			var newVector = Vector4(x, y, z, w);
+			projectionVector.push(newVector);
+		}
+		
+		var afterClip = [];
+		for()
+		
+		
+		
+		for(var k=0; k<scene.models.length;k++){
+			for(var i =0; i<scene.models[k].edges.length;i++){
+				for(var j=0; j<scene.models[k].edges[i].length-1;j++){
+					drawx1 = projectionVector[scene.models[k].edges[i][j]].x;
+					drawy1 = projectionVector[scene.models[k].edges[i][j]].y;
+					drawx2 = projectionVector[scene.models[k].edges[i][j+1]].x;
+					drawy2 = projectionVector[scene.models[k].edges[i][j+1]].y;				
 					DrawLine(drawx1,drawy1,drawx2,drawy2);
 				}
 			}
@@ -84,23 +99,52 @@ function DrawScene() {
 		
 		
 	}else{
+		var npar_matrix = mat4x4parallel(scene.view.vrp, scene.view.vpn, scene.view.vup, scene.view.prp, scene.view.clip);
+		var mParallel_matrix = new Matrix(4,4);
+		mParallel_matrix.values = [1,0,0,0],[0,1,0,0],[0,0,0,0],[0,0,0,1];
+		var view_matrix = new Matrix(4,4);
+		view_matrix.values = [[view.width/2, 0, 0, view.width/2],[0, view.height/2, 0, view.height/2],[0,0,1,0],[0,0,0,1]];
+		var projectionMatrix = [];
+		for (var i = 0; i < scene.models[0].vertices.length; i++) {
+			projectionMatrix.push(Matrix.multiply(view_matrix,mParallel_matrix,npar_matrix,scene.models[0].vertices[i]));
+		}
+		
+		var projectionVector = [];		
+		for (var i = 0; i< projectionMatrix.length; i++) {
+			var x = projectionMatrix[i].values[0][0];
+			var y = projectionMatrix[i].values[1][0];
+			var z = projectionMatrix[i].values[2][0];
+			var w = projectionMatrix[i].values[3][0];
+			var newVector = Vector4(x, y, z, w);
+			projectionVector.push(newVector);
+		}
+		
+		
+		console.log(scene.models);
+		for(var k=0; k<scene.models.length;k++){
+			for(var i =0; i<scene.models[k].edges.length;i++){
+				for(var j=0; j<scene.models[k].edges[i].length-1;j++){
+					drawx1 = projectionVector[scene.models[k].edges[i][j]].x;
+					drawy1 = projectionVector[scene.models[k].edges[i][j]].y;
+					drawx2 = projectionVector[scene.models[k].edges[i][j+1]].x;
+					drawy2 = projectionVector[scene.models[k].edges[i][j+1]].y;				
+					DrawLine(drawx1,drawy1,drawx2,drawy2);
+				}
+			}
+		}
+
 		
 	}
 	
-	
-	
-	//mper
-	//mat4x4mper(near)
-    console.log(scene);
 }
 
-function GetOutcode(Vector4,z_min){
+function GetOutcode(Vector4,view){
 	var x = Vector4.x;
 	var y = Vector4.y;
 	var z = Vector4.z;
-	//var zmin = -(-z+scene.view.clip[4])/(-z+scene.view.clip[5]);
+	var zmin = -(-z+view.clip[4])/(-z+view.clip[5]);
 	var code = 0;
-	if(scene.view.type){			// for outcode left = 32
+	if(view.type){// for outcode left = 32
 				// right = 16
 				// bottom = 8
 				// top = 4
@@ -342,14 +386,14 @@ function LoadNewScene() {
 				var height = scene.models[i].height;
 				var center = scene.models[i].center;
 				
-				var v0 = Vector4(scene.models[i].center[0]-height/2,  scene.models[i].center[1]-height/2, scene.models[i].center[2]+height/2);
-				var v1 = Vector4(scene.models[i].center[0]+height/2,  scene.models[i].center[1]-height/2, scene.models[i].center[2]+height/2);
-				var v2 = Vector4(scene.models[i].center[0]+height/2,  scene.models[i].center[1]+height/2, scene.models[i].center[2]+height/2);
-				var v3 = Vector4(scene.models[i].center[0]-height/2,  scene.models[i].center[1]+height/2, scene.models[i].center[2]+height/2);
-				var v4 = Vector4(scene.models[i].center[0]-height/2,  scene.models[i].center[1]-height/2, scene.models[i].center[2]-height/2);
-				var v5 = Vector4(scene.models[i].center[0]+height/2,  scene.models[i].center[1]-height/2, scene.models[i].center[2]-height/2);
-				var v6 = Vector4(scene.models[i].center[0]+height/2,  scene.models[i].center[1]+height/2, scene.models[i].center[2]-height/2);
-				var v7 = Vector4(scene.models[i].center[0]-height/2,  scene.models[i].center[1]+height/2, scene.models[i].center[2]-height/2);
+				var v0 = Vector4(scene.models[i].center[0]-height/2,  scene.models[i].center[1]-height/2, scene.models[i].center[2]+height/2, 1);
+				var v1 = Vector4(scene.models[i].center[0]+height/2,  scene.models[i].center[1]-height/2, scene.models[i].center[2]+height/2, 1);
+				var v2 = Vector4(scene.models[i].center[0]+height/2,  scene.models[i].center[1]+height/2, scene.models[i].center[2]+height/2, 1);
+				var v3 = Vector4(scene.models[i].center[0]-height/2,  scene.models[i].center[1]+height/2, scene.models[i].center[2]+height/2, 1);
+				var v4 = Vector4(scene.models[i].center[0]-height/2,  scene.models[i].center[1]-height/2, scene.models[i].center[2]-height/2, 1);
+				var v5 = Vector4(scene.models[i].center[0]+height/2,  scene.models[i].center[1]-height/2, scene.models[i].center[2]-height/2, 1);
+				var v6 = Vector4(scene.models[i].center[0]+height/2,  scene.models[i].center[1]+height/2, scene.models[i].center[2]-height/2, 1);
+				var v7 = Vector4(scene.models[i].center[0]-height/2,  scene.models[i].center[1]+height/2, scene.models[i].center[2]-height/2, 1);
 				scene.models[i].vertices = [v0,v1,v2,v3,v4,v5,v6,v7];
 				scene.models[i].edges = [[0,1,2,3,0],[4,5,6,7,4],[0,4],[1,5],[2,6],[3,7]];
 				
@@ -361,33 +405,35 @@ function LoadNewScene() {
 				var sides = scene.models[i].sides;
 				var rotate = mat4x4rotatey(360/sides);
 				
-				var v0 = Vector4(center[0]-radius*Math.sin((360/sides)*(Math.PI/180.0)),center[1]-height/2,center[2]+radius*Math.cos((360/sides)*(Math.PI/180.0))); 
-				scene.models[i].vertices[0].push(v0);
-				for(var j = 1; j<sides;j++ ){
+				var v0 = Vector4(center[0]-radius*Math.sin((360/2*sides)*(Math.PI/180.0)),center[1]-height/2,center[2]+radius*Math.cos((360/2*sides)*(Math.PI/180.0)),1); 
+				scene.models[i].vertices=[v0];
+				for(var j = 0; j<sides;j++ ){
 					var v = rotate.mult(v0);
 					v0 = v;
-					scene.models[i].vertices[j].push(v);
+					scene.models[i].vertices.push(v);
 				}
-				var v_Top0 = Vector4(center[0]-radius*Math.sin((360/sides)*(Math.PI/180.0)),center[1]+height/2,center[2]+radius*Math.cos((360/sides)*(Math.PI/180.0)));
-				scene.models[i].vertices[sides].push(v_Top0);
-				for(var j= 1; j<sides;j++ ){
+				var v_Top0 = Vector4(center[0]-radius*Math.sin((360/2*sides)*(Math.PI/180.0)),center[1]+height/2,center[2]+radius*Math.cos((360/2*sides)*(Math.PI/180.0)));
+				scene.models[i].vertices.push(v_Top0);
+				for(var j= 0; j<sides;j++ ){
 					var top_v = rotate.mult(v_Top0);
 					v_Top0 = top_v;
-					scene.models[i].vertices[sides+j].push(top_v);
-				}
+					scene.models[i].vertices.push(top_v);
+				}//finished the cylinder vertices
 				
-				for(var j= 0; j<(scene.models[i].vertices.length)/2;j++){
-					scene.models[i].edges[0][j].push(j);
+				scene.models[i].edges[0]=[0];
+				for(var j= 1; j<(scene.models[i].vertices.length)/2;j++){
+					scene.models[i].edges[0].push(j);
 				}
-				scene.models[i].edges[0][(scene.models[i].vertices.length)/2].push(scene.models[i].edges[0][0]);
+				scene.models[i].edges[0].push(scene.models[i].edges[0][0]);
 				
-				for(var j=(scene.models[i].vertices.length)/2; j<(scene.models[i].vertices.length);j++){
-					scene.models[i].edges[1][j].push(j);
+				scene.models[i].edges[1]=[scene.models[i].vertices.length/2];
+				for(var j=((scene.models[i].vertices.length)/2)+1; j<(scene.models[i].vertices.length);j++){
+					scene.models[i].edges[1].push(j);
 				}
-				scene.models[i].edges[1][(scene.models[i].vertices.length)/2].push(scene.models[i].edges[1][0]);
+				scene.models[i].edges[1].push(scene.models[i].edges[1][0]);
 				
-				for (var j = 0; j < scene.models[i].edges[1][0].length; j++) {
-					scene.models[i].edges[1][2+j] = [scene.models[i].edges[0][j],scene.models[i].edges[1][j]];
+				for (var j = 0; j < scene.models[i].edges[1].length; j++) {
+					scene.models[i].edges[2+j]=[scene.models[i].edges[0][j],scene.models[i].edges[1][j]];
 				}	
 				
 			}else {
