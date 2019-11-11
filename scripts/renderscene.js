@@ -58,6 +58,7 @@ function Init() {
 
 // Main drawing code here! Use information contained in variable `scene`
 function DrawScene() {
+	ctx.clearRect(0, 0, view.width, view.height);
 
 	if(scene.view.type === 'perspective'){
 		var npar_matrix = mat4x4perspective(scene.view.vrp, scene.view.vpn, scene.view.vup, scene.view.prp, scene.view.clip);
@@ -80,7 +81,7 @@ function DrawScene() {
 		}
 		
 		var afterClip = [];
-		for()
+		// for()
 		
 		
 		
@@ -135,7 +136,6 @@ function DrawScene() {
 
 		
 	}
-	
 }
 
 function GetOutcode(Vector4,view){
@@ -443,7 +443,6 @@ function LoadNewScene() {
                                                  1);
             }
         }
-
         DrawScene();
     };
     reader.readAsText(scene_file.files[0], "UTF-8");
@@ -451,20 +450,27 @@ function LoadNewScene() {
 
 // Called when user presses a key on the keyboard down 
 function OnKeyDown(event) {
+	U = (scene.view.vup.cross(scene.view.vpn));	
+	N = (scene.view.vpn);	
     switch (event.keyCode) {
         case 37: // LEFT Arrow
             console.log("left");
+			scene.view.vrp = scene.view.vrp.subtract(U);
             break;
         case 38: // UP Arrow
             console.log("up");
+			scene.view.vrp = scene.view.vrp.subtract(N);
             break;
         case 39: // RIGHT Arrow
             console.log("right");
+			scene.view.vrp = scene.view.vrp.add(U);
             break;
         case 40: // DOWN Arrow
             console.log("down");
+			scene.view.vrp = scene.view.vrp.add(N);
             break;
     }
+	DrawScene();
 }
 
 // Draw black 2D line with red endpoints 
@@ -479,3 +485,4 @@ function DrawLine(x1, y1, x2, y2) {
     ctx.fillRect(x1 - 2, y1 - 2, 4, 4);
     ctx.fillRect(x2 - 2, y2 - 2, 4, 4);
 }
+
