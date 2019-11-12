@@ -492,7 +492,7 @@ function LoadNewScene() {
 				for (var j = 0; j < scene.models[i].edges[1].length-1; j++) {
 					scene.models[i].edges[2+j]=[scene.models[i].edges[0][j],scene.models[i].edges[1][j]];
 				}
-			}else if (scene.models[i].type === 'Sphere'){
+			}else if (scene.models[i].type === 'sphere'){
 				// spherical coordinates
 				// x=rsinϕcosθ,   y=rsinϕsinθ,    z=rcosϕ
 				// r, phi, theta
@@ -538,14 +538,14 @@ function LoadNewScene() {
 					scene.models[i].edges[j+slices] = cur_edges;
 				}
 					
-			}else if (scene.models[i].type === 'Cone'){
+			}else if (scene.models[i].type === 'cone'){
 				
 				var radius = scene.models[i].radius;
-				var base = scene.models[i].base;
+				var center = scene.models[i].center;
 				var height = scene.models[i].height;
 				var sides = scene.models[i].sides;
-										
-	
+				
+					
 				
 				
 			}else {

@@ -24,6 +24,13 @@
                 "axis": "y",
                 "rps": 0.5
             }
-        }
+        },
+		{
+			"type": "sphere",
+			"center": [8, 8, -15],
+			"radius": 4,
+			"stacks": 10,
+			"slices": 10
+		}
     ]
 }
