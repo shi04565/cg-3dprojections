@@ -520,6 +520,7 @@ function LoadNewScene() {
 				var bot_v = Vector4(center[0], center[1], center[2]-radius, 1);
 				scene.models[i].vertices.push(bot_v);
 				
+				scene.models[i].edges = [];
 				for (j=0; j<slices; j++){
 					var cur_edges = [0];  // top vertex
 					for (k=0; k<stacks-1; k++){
