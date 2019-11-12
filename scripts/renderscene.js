@@ -536,14 +536,15 @@ function LoadNewScene() {
 					}
 					cur_edges.push(j);
 					scene.models[i].edges[j+slices] = cur_edges;
+				}
 					
-				}else if (scene.models[i].type === 'Cone'){
-					var radius = scene.models[i].radius;
-					var base = scene.models[i].base;
-					var height = scene.models[i].height;
-					var sides = scene.models[i].sides;
-					
-					
+			}else if (scene.models[i].type === 'Cone'){
+				
+				var radius = scene.models[i].radius;
+				var base = scene.models[i].base;
+				var height = scene.models[i].height;
+				var sides = scene.models[i].sides;
+										
 	
 				
 				
