@@ -25,12 +25,28 @@
                 "rps": 0.5
             }
         },
-		{
-			"type": "sphere",
-			"center": [8, 8, -15],
-			"radius": 4,
-			"stacks": 10,
-			"slices": 10
-		}
+        {
+            "type": "cone",
+            "center": [20, 10, -49],
+            "radius": 3,
+            "height": 7,
+            "sides": 12,
+            "animation": {
+                "axis": "y",
+                "rps": 0.5
+            }
+        },
+        {
+            "type": "sphere",
+            "center": [20, 30, -47],
+            "radius": 8,
+            "slices": 20,
+            "stacks": 30,
+            "animation": {
+                "axis": "y",
+                "rps": 0.5
+            }
+        }		
+		
     ]
 }
