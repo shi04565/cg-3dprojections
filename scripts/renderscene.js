@@ -451,47 +451,63 @@ function LoadNewScene() {
 				scene.models[i].edges = [[0,1,2,3,0],[4,5,6,7,4],[0,4],[1,5],[2,6],[3,7]];
 				
 			}else if (scene.models[i].type === 'cylinder'){
-				
 				var radius = scene.models[i].radius;
 				var height = scene.models[i].height;
 				var center = scene.models[i].center;
 				var sides = scene.models[i].sides;
 				var rotate = mat4x4rotatey(360/sides);
-				
-				var v0 = Vector4(center[0]-radius*Math.sin((360/2*sides)*(Math.PI/180.0)),center[1]-height/2,center[2]+radius*Math.cos((360/2*sides)*(Math.PI/180.0)),1); 
-				scene.models[i].vertices=[v0];
-				for(var j = 0; j<sides-1;j++ ){
-					var v = rotate.mult(v0);
-					v0 = v;
-					var put = Vector4(v.values[0][0],v.values[1][0],v.values[2][0],v.values[3][0]);
-					scene.models[i].vertices.push(put);
+				// vertices
+				scene.models[i].vertices = [];
+				for(var j = 0; j<sides; j++) {
+					scene.models[i].vertices.push(Vector4(center[0]+radius*Math.cos(j*2*Math.PI/sides),center[1]-height/2,center[2]-radius*Math.sin(j*2*Math.PI/sides),1));
 				}
-				var v_Top0 = Vector4(center[0]-radius*Math.sin((360/2*sides)*(Math.PI/180.0)),center[1]+height/2,center[2]+radius*Math.cos((360/2*sides)*(Math.PI/180.0)), 1);
-				scene.models[i].vertices.push(v_Top0);
-				for(var j= 0; j<sides-1;j++ ){
-					var top_v = rotate.mult(v_Top0);
-					v_Top0 = top_v;
-					var put = Vector4(top_v.values[0][0],top_v.values[1][0],top_v.values[2][0],top_v.values[3][0]);
-					scene.models[i].vertices.push(put);
-
-				}//finished the cylinder vertices
+				for(var k = 0; k<sides; k++) {
+					scene.models[i].vertices.push(Vector4(center[0]+radius*Math.cos(k*2*Math.PI/sides),center[1]+height/2,center[2]-radius*Math.sin(k*2*Math.PI/sides),1));
+				}
+				// edges
+				scene.models[i].edges = [];
+				for(let j = 0; j<((scene.models[i].vertices.length)/2)+2; j++) {
+					scene.models[i].edges[j] = [];
+				}
+				for(var j = 0; j<(scene.models[i].vertices.length)/2; j++) {
+					scene.models[i].edges[0][j] = j;
+				}
+				scene.models[i].edges[0][(scene.models[i].vertices.length)/2] = scene.models[i].edges[0][0];
+				for(var j = (scene.models[i].vertices.length)/2; j<(scene.models[i].vertices.length); j++) {
+					scene.models[i].edges[1][j-(scene.models[i].vertices.length)/2] = j;
+				}
+				scene.models[i].edges[1][(scene.models[i].vertices.length)/2] = scene.models[i].edges[1][0];
+				for (var j = 0; j < scene.models[i].edges[0].length-1; j++) {
+					scene.models[i].edges[2+j] = [scene.models[i].edges[0][j],scene.models[i].edges[1][j]];
+				}
+			}else if(scene.models[i].type == 'cone'){
+				var radius = scene.models[i].radius;
+				var height = scene.models[i].height;
+				var center = scene.models[i].center;
+				var sides = scene.models[i].sides;
+				var rotate = mat4x4rotatey(360/sides);
+				// vertices
+				scene.models[i].vertices = [];
+				for(var j = 0; j<sides; j++) {
+					scene.models[i].vertices.push(Vector4(center[0]+radius*Math.cos(j*2*Math.PI/sides),center[1]-height/2,center[2]-radius*Math.sin(j*2*Math.PI/sides),1));
+				}
 				
-				scene.models[i].edges=[];
+				scene.models[i].vertices.push(Vector4(center[0],center[1]+height/2,center[2],1));
+
+
+				scene.models[i].edges = [];
 				scene.models[i].edges[0] = [0];
-				for(var j= 1; j<(scene.models[i].vertices.length)/2;j++){
+				for(var j = 1; j<scene.models[i].vertices.length-1; j++) {
 					scene.models[i].edges[0].push(j);
 				}
-				scene.models[i].edges[0].push(scene.models[i].edges[0][0]);
+				scene.models[i].edges[0].push(0);
 				
-				scene.models[i].edges.push([scene.models[i].vertices.length/2]);
-				for(var j=((scene.models[i].vertices.length)/2)+1; j<(scene.models[i].vertices.length);j++){
-					scene.models[i].edges[1].push(j);
+				for(var j = 0; j<scene.models[i].vertices.length-1;j++){
+					scene.models[i].edges[j+1] = [];
+					scene.models[i].edges[j+1].push(j);
+					scene.models[i].edges[j+1].push(scene.models[i].vertices.length-1);
 				}
-				scene.models[i].edges[1].push(scene.models[i].edges[1][0]);
-				
-				for (var j = 0; j < scene.models[i].edges[1].length-1; j++) {
-					scene.models[i].edges[2+j]=[scene.models[i].edges[0][j],scene.models[i].edges[1][j]];
-				}
+
 			}else if (scene.models[i].type === 'sphere'){
 				// spherical coordinates
 				// x=rsinϕcosθ,   y=rsinϕsinθ,    z=rcosϕ
@@ -537,17 +553,7 @@ function LoadNewScene() {
 					cur_edges.push(j);
 					scene.models[i].edges[j+slices] = cur_edges;
 				}
-					
-			}else if (scene.models[i].type === 'cone'){
-				
-				var radius = scene.models[i].radius;
-				var center = scene.models[i].center;
-				var height = scene.models[i].height;
-				var sides = scene.models[i].sides;
-				
-					
-				
-				
+			
 			}else {
                 scene.models[i].center = Vector4(scene.models[i].center[0],
                                                  scene.models[i].center[1],
