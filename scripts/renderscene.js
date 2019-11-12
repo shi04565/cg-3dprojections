@@ -412,7 +412,7 @@ function LoadNewScene() {
 					v0 = v;
 					scene.models[i].vertices.push(v);
 				}
-				var v_Top0 = Vector4(center[0]-radius*Math.sin((360/2*sides)*(Math.PI/180.0)),center[1]+height/2,center[2]+radius*Math.cos((360/2*sides)*(Math.PI/180.0)));
+				var v_Top0 = Vector4(center[0]-radius*Math.sin((360/2*sides)*(Math.PI/180.0)),center[1]+height/2,center[2]+radius*Math.cos((360/2*sides)*(Math.PI/180.0)), 1);
 				scene.models[i].vertices.push(v_Top0);
 				for(var j= 0; j<sides;j++ ){
 					var top_v = rotate.mult(v_Top0);
@@ -434,7 +434,61 @@ function LoadNewScene() {
 				
 				for (var j = 0; j < scene.models[i].edges[1].length; j++) {
 					scene.models[i].edges[2+j]=[scene.models[i].edges[0][j],scene.models[i].edges[1][j]];
-				}	
+				}
+			}else if (scene.models[i].type === 'Sphere'){
+				// spherical coordinates
+				// x=rsinϕcosθ,   y=rsinϕsinθ,    z=rcosϕ
+				// r, phi, theta
+				// constant radius
+				var radius = scene.models[i].radius;
+				var center = scene.models[i].center;
+				var stacks = scene.models[i].stacks;
+				var slices = scene.models[i].slices;
+				
+				var top_v = Vector4(center[0], center[1], center[2]+radius, 1);
+				scene.models[i].vertices=[top_v];
+
+				delta_theta = 2*Math.PI / slices; // theta 0 to 2pi , split up by slices
+				delta_phi = Math.PI / stacks;     // phi 0 to pi, split up by stacks
+				
+				for (j=1; j<stacks-1; j++){
+					var phi = j*delta_phi;
+					for (k=0; k<slices; k++){
+						var theta = k*delta_theta;
+						var v = Vector4(radius*Math.sin(phi)*Math.cos(theta)+center[0], radius*Math.sin(phi)*Math.sin(theta)+center[1], radius*Math.sin(phi)+center[2], 1);
+						scene.models[i].vertices.push(v);
+					}
+				}
+				
+				var bot_v = Vector4(center[0], center[1], center[2]-radius, 1);
+				scene.models[i].vertices.push(bot_v);
+				
+				for (j=0; j<slices; j++){
+					var cur_edges = [0];  // top vertex
+					for (k=0; k<stacks-1; k++){
+						cur_edges.push((j+1) + (k*slices));
+					}
+					cur_edges.push(scene.models[i].vertices.length) // bot vertex
+					scene.models[i].edges[j] = cur_edges;
+				}
+				
+				for (j=1; j<stacks-1; j++){
+					var cur_edges = [];
+					for (k=0; k<slices; k++){
+						cur_edges.push(j+k);
+					}
+					cur_edges.push(j);
+					scene.models[i].edges[j+slices] = cur_edges;
+					
+				}else if (scene.models[i].type === 'Cone'){
+					var radius = scene.models[i].radius;
+					var base = scene.models[i].base;
+					var height = scene.models[i].height;
+					var sides = scene.models[i].sides;
+					
+					
+	
+				
 				
 			}else {
                 scene.models[i].center = Vector4(scene.models[i].center[0],
