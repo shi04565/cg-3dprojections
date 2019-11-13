@@ -1,7 +1,9 @@
 var view;
 var ctx;
 var scene;
-
+var start_time;
+var prev_time;
+	
 // Initialization function - called when web page loads
 function Init() {
     var w = 800;
@@ -25,6 +27,7 @@ function Init() {
         models: [
             {
                 type: 'generic',
+				center: [15, 10, -45],
                 vertices: [
                     Vector4( 0,  0, -30, 1),
                     Vector4(20,  0, -30, 1),
@@ -45,20 +48,70 @@ function Init() {
                     [2, 7],
                     [3, 8],
                     [4, 9]
-                ]
+                ],
+			    animation: {
+					axis: "y",
+					rps: 0.5
+				}
             }
         ]
     };
 
-    // event handler for pressing arrow keys
-    document.addEventListener('keydown', OnKeyDown, false);
-    
-    DrawScene();
+	
+	// event handler for pressing arrow keys
+	document.addEventListener('keydown', OnKeyDown, false);
+    	
+	start_time = performance.now(); // current timestamp in milliseconds
+	prev_time = start_time;
+	window.requestAnimationFrame(Animate);
+}
+
+function Animate(timestamp) {
+	// step 1: calculate time (time since start) and/or delta time (time between successive frames)
+	// step 2: transform models based on time or delta time
+	// step 3: draw scene
+	// step 4: request next animation frame (recursively calling same function)
+
+	// var time = timestamp - start_time;
+	var dt = timestamp - prev_time;
+	prev_time = timestamp;
+
+	// ... step 2
+	var theta = 90;
+	var rotateMat;
+	var rps;
+	
+	for (i=0; i<scene.models.length; i++){
+		var transToOriginMat = mat4x4translate(-scene.models[i].center[0], -scene.models[i].center[1], -scene.models[i].center[2]);
+		
+		rps = scene.models[i].animation.rps;
+		theta = (rps/1000) * (360)
+		
+		if(scene.models[i].animation.axis === 'y'){
+			rotateMat = mat4x4rotatey(theta);
+		}else if(scene.models[i].animation.axis === 'x'){
+			rotateMat = mat4x4rotatex(theta);
+		}else{
+			rotateMat = mat4x4rotatez(theta);
+		}
+		
+		var transBackMat = mat4x4translate(scene.models[i].center[0], scene.models[i].center[1], scene.models[i].center[2]);
+		var fullMat = Matrix.multiply(transBackMat, rotateMat, transToOriginMat);
+		
+		for (j = 0; j<scene.models[i].vertices.length; j++){
+			scene.models[i].vertices[j] = Matrix.multiply(fullMat, scene.models[i].vertices[j]);
+		}
+
+	}	
+
+	DrawScene();
+	window.requestAnimationFrame(Animate);
 }
 
 // Main drawing code here! Use information contained in variable `scene`
 function DrawScene() {
-	ctx.clearRect(0,0, view.width, view.height);
+	view = document.getElementById('view');
+	ctx.clearRect(0, 0, view.width, view.height);
 	if(scene.view.type === 'perspective'){
 		var npar_matrix = mat4x4perspective(scene.view.vrp, scene.view.vpn, scene.view.vup, scene.view.prp, scene.view.clip);
 		var mPerspective_matrix = mat4x4mper(-1);
@@ -149,7 +202,7 @@ function DrawScene() {
 					var pt1 = beforeOut_projectionMatrix[i][scene.models[i].edges[l][j+1]];
 					console.log(pt0);
 					console.log(pt1);
-
+					
 					var answer = clipping(pt0,pt1,scene.view);
 					if(answer !== null){
 						var pt_0 = Vector4(answer.pt0.x,answer.pt0.y,answer.pt0.z,answer.pt0.w);
@@ -590,7 +643,7 @@ function OnKeyDown(event) {
 			scene.view.vrp = scene.view.vrp.add(N);
             break;
     }
-	DrawScene();
+	//DrawScene();
 }
 
 // Draw black 2D line with red endpoints 
