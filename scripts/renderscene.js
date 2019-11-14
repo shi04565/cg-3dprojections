@@ -50,7 +50,7 @@ function Init() {
                     [4, 9]
                 ],
 			    animation: {
-					axis: "y",
+					axis: "z",
 					rps: 0.5
 				}
             }
@@ -189,19 +189,19 @@ function DrawScene() {
 			}
 			beforeOut_projectionMatrix.push(beforeIn_projectionMatrix);
 		}
-		console.log(scene.models);
-		console.log(beforeOut_projectionMatrix);
+		//console.log(scene.models);
+		//console.log(beforeOut_projectionMatrix);
 		var afterClip_out = [];
 		
 		for(var i =0; i<beforeOut_projectionMatrix.length;i++){
 			var afterClip_in = [];
 			for(var l = 0; l<scene.models[i].edges.length;l++){
 				for(var j = 0; j<scene.models[i].edges[l].length-1;j++){
-					console.log(i+"  "+l+"   "+j);
+					//console.log(i+"  "+l+"   "+j);
 					var pt0 = beforeOut_projectionMatrix[i][scene.models[i].edges[l][j]];
 					var pt1 = beforeOut_projectionMatrix[i][scene.models[i].edges[l][j+1]];
-					console.log(pt0);
-					console.log(pt1);
+					//console.log(pt0);
+					//console.log(pt1);
 					
 					var answer = clipping(pt0,pt1,scene.view);
 					if(answer !== null){
@@ -216,11 +216,11 @@ function DrawScene() {
 					}
 				}
 				afterClip_out.push(afterClip_in);
-				console.log(afterClip_out);
+				//console.log(afterClip_out);
 			
 				
 		}
-		console.log(afterClip_out);
+		//console.log(afterClip_out);
 		var projectionVector = [];		
 		for (var i = 0; i< afterClip_out.length; i++) {
 			for(var j = 0; j<afterClip_out[i].length;j++){
@@ -469,7 +469,7 @@ function clipping(input_pt0,input_pt1,view){
 function LoadNewScene() {
     var scene_file = document.getElementById('scene_file');
 
-    console.log(scene_file.files[0]);
+    //console.log(scene_file.files[0]);
 
     var reader = new FileReader();
     reader.onload = (event) => {
@@ -571,22 +571,23 @@ function LoadNewScene() {
 				var stacks = scene.models[i].stacks;
 				var slices = scene.models[i].slices;
 				
-				var top_v = Vector4(center[0], center[1], center[2]+radius, 1);
+				
+				var top_v = Vector4(center[0], center[1]+radius, center[2], 1);
 				scene.models[i].vertices=[top_v];
 
 				delta_theta = 2*Math.PI / slices; // theta 0 to 2pi , split up by slices
 				delta_phi = Math.PI / stacks;     // phi 0 to pi, split up by stacks
 				
-				for (j=1; j<stacks-1; j++){
+				for (j=1; j<stacks; j++){
 					var phi = j*delta_phi;
 					for (k=0; k<slices; k++){
 						var theta = k*delta_theta;
-						var v = Vector4(radius*Math.sin(phi)*Math.cos(theta)+center[0], radius*Math.sin(phi)*Math.sin(theta)+center[1], radius*Math.sin(phi)+center[2], 1);
+						var v = Vector4(radius*Math.sin(phi)*Math.sin(theta)+center[0], radius*Math.cos(phi)+center[1], -radius*Math.sin(phi)*Math.cos(theta)+center[2], 1);
 						scene.models[i].vertices.push(v);
 					}
 				}
 				
-				var bot_v = Vector4(center[0], center[1], center[2]-radius, 1);
+				var bot_v = Vector4(center[0], center[1]-radius, center[2], 1);
 				scene.models[i].vertices.push(bot_v);
 				
 				scene.models[i].edges = [];
@@ -595,17 +596,17 @@ function LoadNewScene() {
 					for (k=0; k<stacks-1; k++){
 						cur_edges.push((j+1) + (k*slices));
 					}
-					cur_edges.push(scene.models[i].vertices.length) // bot vertex
+					cur_edges.push(scene.models[i].vertices.length-1) // bot vertex
 					scene.models[i].edges[j] = cur_edges;
 				}
 				
-				for (j=1; j<stacks-1; j++){
+				for (j=1; j<stacks; j++){
 					var cur_edges = [];
 					for (k=0; k<slices; k++){
-						cur_edges.push(j+k);
+						cur_edges.push((j-1)*slices+(k+1));
 					}
-					cur_edges.push(j);
-					scene.models[i].edges[j+slices] = cur_edges;
+					cur_edges.push((j-1)*slices + 1);
+					scene.models[i].edges[j+slices-1] = cur_edges;
 				}
 			
 			}else {
@@ -615,8 +616,7 @@ function LoadNewScene() {
                                                  1);
             }
         }
-
-        DrawScene();
+        //DrawScene();
     };
     reader.readAsText(scene_file.files[0], "UTF-8");
 }
