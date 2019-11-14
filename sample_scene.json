@@ -10,11 +10,11 @@
     "models": [
         {
             "type": "cube",
-            "center": [4, 4, -10],
-            "width": 8,
-            "height": 8,
+            "center": [8, 10, -49],
+            "width": 4,
+            "height": 4,
 			"animation": {
-                "axis": "y",
+                "axis": "z",
                 "rps": 0.5
             }
         },
@@ -25,7 +25,7 @@
             "height": 5,
             "sides": 12,
             "animation": {
-                "axis": "y",
+                "axis": "x",
                 "rps": 0.5
             }
         },
@@ -42,13 +42,13 @@
         },
         {
             "type": "sphere",
-            "center": [20, 30, -47],
-            "radius": 8,
+            "center": [16, 10, -49],
+            "radius": 2,
             "slices": 20,
             "stacks": 30,
             "animation": {
                 "axis": "y",
-                "rps": 0.5
+                "rps": 4
             }
         }		
 		
