@@ -189,7 +189,7 @@ function DrawScene() {
 			}
 			beforeOut_projectionMatrix.push(beforeIn_projectionMatrix);
 		}
-		//console.log(scene.models);
+		console.log(scene.models);
 		//console.log(beforeOut_projectionMatrix);
 		var afterClip_out = [];
 		
@@ -509,15 +509,20 @@ function LoadNewScene() {
 				var center = scene.models[i].center;
 				var sides = scene.models[i].sides;
 				var rotate = mat4x4rotatey(360/sides);
-				// vertices
 				scene.models[i].vertices = [];
 				for(var j = 0; j<sides; j++) {
-					scene.models[i].vertices.push(Vector4(center[0]+radius*Math.cos(j*2*Math.PI/sides),center[1]-height/2,center[2]-radius*Math.sin(j*2*Math.PI/sides),1));
+					var x = center[0]+radius*Math.cos(j*2*Math.PI/sides);
+					var y = center[1]-height/2;
+					var z = center[2]-radius*Math.sin(j*2*Math.PI/sides);
+					scene.models[i].vertices.push(Vector4(x,y,z,1));
 				}
-				for(var k = 0; k<sides; k++) {
-					scene.models[i].vertices.push(Vector4(center[0]+radius*Math.cos(k*2*Math.PI/sides),center[1]+height/2,center[2]-radius*Math.sin(k*2*Math.PI/sides),1));
+				for(var j = 0; j<sides; j++) {
+					var x = center[0]+radius*Math.cos(j*2*Math.PI/sides);
+					var y = center[1]+height/2;
+					var z = center[2]-radius*Math.sin(j*2*Math.PI/sides);
+					scene.models[i].vertices.push(Vector4(x,y,z,1));
 				}
-				// edges
+				// finished the vertices
 				scene.models[i].edges = [];
 				for(let j = 0; j<((scene.models[i].vertices.length)/2)+2; j++) {
 					scene.models[i].edges[j] = [];
@@ -623,8 +628,10 @@ function LoadNewScene() {
 
 // Called when user presses a key on the keyboard down 
 function OnKeyDown(event) {
-	U = (scene.view.vup.cross(scene.view.vpn));	
-	N = (scene.view.vpn);	
+	U = (scene.view.vup.cross(scene.view.vpn));
+	U.normalize();
+	N = (scene.view.vpn);
+	N.normalize();	
     switch (event.keyCode) {
         case 37: // LEFT Arrow
             console.log("left");
